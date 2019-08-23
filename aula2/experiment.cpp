@@ -12,7 +12,7 @@ double *Experiment::generate_input() {
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 
-    for(int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         std::uniform_real_distribution<> dis(0.0, 10.0);
         temp[i] = dis(gen);
     }

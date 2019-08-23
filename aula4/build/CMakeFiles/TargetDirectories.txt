@@ -1,0 +1,3 @@
+/home/chends/Desktop/Insper/2019_2/Supercomp/aula4/build/CMakeFiles/rebuild_cache.dir
+/home/chends/Desktop/Insper/2019_2/Supercomp/aula4/build/CMakeFiles/vector_O0.dir
+/home/chends/Desktop/Insper/2019_2/Supercomp/aula4/build/CMakeFiles/edit_cache.dir
