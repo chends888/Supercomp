@@ -99,6 +99,86 @@ double pi_omp_parallel_local(double steps) {
     return pi;
 }
 
+
+double pi_omp_parallel_atomic(double steps) {
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    std::cout << "\nOmp threads detected: " << num_threads << std::endl;
+    std::vector<std::thread> threads;
+    double step = 1.0 / steps;
+    // Setting the numebr of steps for each thread
+    steps = steps / num_threads;
+
+    double sum = 0;
+
+    #pragma omp parallel
+    {
+        double x, partsum = 0;
+        for (int i=omp_get_thread_num()*steps; i<(omp_get_thread_num()*steps)+steps; i++) {
+            x = (i + 0.5) * step;
+            partsum += 4.0 / (1.0 + x * x);
+        }
+        #pragma omp atomic
+        sum += partsum;
+    }
+
+    double pi = step * sum;
+    return pi;
+}
+
+
+double pi_omp_parallel_critical(double steps) {
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    std::cout << "\nOmp threads detected: " << num_threads << std::endl;
+    std::vector<std::thread> threads;
+    double step = 1.0 / steps;
+    // Setting the numebr of steps for each thread
+    steps = steps / num_threads;
+
+    double sum = 0;
+
+    #pragma omp parallel
+    #pragma omp critical
+    {
+        double x, partsum = 0;
+        for (int i=omp_get_thread_num()*steps; i<(omp_get_thread_num()*steps)+steps; i++) {
+            x = (i + 0.5) * step;
+            partsum += 4.0 / (1.0 + x * x);
+        }
+        #pragma omp atomic
+        sum += partsum;
+    }
+
+    double pi = step * sum;
+    return pi;
+}
+
+
+double pi_omp_parallel_critical_wrong(double steps) {
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    std::cout << "\nOmp threads detected: " << num_threads << std::endl;
+    std::vector<std::thread> threads;
+    double step = 1.0 / steps;
+    // Setting the numebr of steps for each thread
+    steps = steps / num_threads;
+
+    double sum = 0;
+
+    #pragma omp parallel
+    #pragma omp critical
+    {
+        double x, partsum = 0;
+        for (int i=omp_get_thread_num()*steps; i<(omp_get_thread_num()*steps)+steps; i++) {
+            x = (i + 0.5) * step;
+            #pragma omp atomic
+            sum += 4.0 / (1.0 + x * x);
+        }
+    }
+
+    double pi = step * sum;
+    return pi;
+}
+
+
 int main() {
     double steps = 100000000;
 
@@ -127,7 +207,7 @@ int main() {
     pi = pi_omp_parallel(steps);
     end_time = std::chrono::high_resolution_clock::now();
     time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
-    std::cout << "Omp parallel with threads pi: ";
+    std::cout << "Omp parallel pi: ";
     std::cout.precision(17);
     std::cout << pi << std::endl;
     std::cout.precision(3);
@@ -137,10 +217,39 @@ int main() {
     pi = pi_omp_parallel_local(steps);
     end_time = std::chrono::high_resolution_clock::now();
     time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
-    std::cout << "Omp parallel local with threads pi: ";
+    std::cout << "Omp parallel local pi: ";
     std::cout.precision(17);
     std::cout << pi << std::endl;
     std::cout.precision(3);
     std::cout << "Took: " <<  time_span.count() << " s" << std::endl << std::endl;
 
+    start_time = std::chrono::high_resolution_clock::now();
+    pi = pi_omp_parallel_atomic(steps);
+    end_time = std::chrono::high_resolution_clock::now();
+    time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
+    std::cout << "Omp parallel atomic pi: ";
+    std::cout.precision(17);
+    std::cout << pi << std::endl;
+    std::cout.precision(3);
+    std::cout << "Took: " <<  time_span.count() << " s" << std::endl << std::endl;
+
+    start_time = std::chrono::high_resolution_clock::now();
+    pi = pi_omp_parallel_critical(steps);
+    end_time = std::chrono::high_resolution_clock::now();
+    time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
+    std::cout << "Omp parallel critical pi: ";
+    std::cout.precision(17);
+    std::cout << pi << std::endl;
+    std::cout.precision(3);
+    std::cout << "Took: " <<  time_span.count() << " s" << std::endl << std::endl;
+
+    start_time = std::chrono::high_resolution_clock::now();
+    pi = pi_omp_parallel_critical_wrong(steps);
+    end_time = std::chrono::high_resolution_clock::now();
+    time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
+    std::cout << "Omp parallel critical wrong pi: ";
+    std::cout.precision(17);
+    std::cout << pi << std::endl;
+    std::cout.precision(3);
+    std::cout << "Took: " <<  time_span.count() << " s" << std::endl << std::endl;
 }
