@@ -9,7 +9,7 @@ How to compile this program:
 g++ pi-numeric-integration.cpp -lpthread -fopenmp
 */
 
-void calc_parc_pi(int id, double steps, double step, double *res) {
+void calc_parc_pi(int id, long steps, double step, double *res) {
     double x, sum = 0;
     for (int i=id*steps; i<(id*steps)+steps; i++) {
         x = (i + 0.5) * step;
@@ -19,7 +19,7 @@ void calc_parc_pi(int id, double steps, double step, double *res) {
 }
 
 
-double pi_seq(double steps) {
+double pi_seq(long steps) {
     double step;
     double x, sum = 0;
     step = 1.0 / steps;
@@ -32,12 +32,12 @@ double pi_seq(double steps) {
     return pi;
 }
 
-double pi_threads(double steps) {
+double pi_threads(long steps) {
     unsigned int num_threads = std::thread::hardware_concurrency();
     std::cout << "\nThreads detected: " << num_threads << std::endl;
     std::vector<std::thread> threads;
     // Setting the numebr of steps for each thread
-    double steps_thread = steps / num_threads;
+    long steps_thread = steps / num_threads;
     double step = 1.0 / steps;
 
     double *res = new double[num_threads];
@@ -54,7 +54,7 @@ double pi_threads(double steps) {
     return pi;
 }
 
-double pi_omp_parallel(double steps) {
+double pi_omp_parallel(long steps) {
     unsigned int num_threads = omp_get_max_threads();
     std::cout << "\nOmp threads detected: " << num_threads << std::endl;
     double step = 1.0 / steps;
@@ -76,7 +76,7 @@ double pi_omp_parallel(double steps) {
 }
 
 
-double pi_omp_parallel_local(double steps) {
+double pi_omp_parallel_local(long steps) {
     unsigned int num_threads = std::thread::hardware_concurrency();
     std::cout << "\nOmp threads detected: " << num_threads << std::endl;
     std::vector<std::thread> threads;
@@ -105,7 +105,7 @@ double pi_omp_parallel_local(double steps) {
 }
 
 
-double pi_omp_parallel_atomic(double steps) {
+double pi_omp_parallel_atomic(long steps) {
     unsigned int num_threads = std::thread::hardware_concurrency();
     std::cout << "\nOmp threads detected: " << num_threads << std::endl;
     std::vector<std::thread> threads;
@@ -131,7 +131,7 @@ double pi_omp_parallel_atomic(double steps) {
 }
 
 
-double pi_omp_parallel_critical(double steps) {
+double pi_omp_parallel_critical(long steps) {
     unsigned int num_threads = std::thread::hardware_concurrency();
     std::cout << "\nOmp threads detected: " << num_threads << std::endl;
     std::vector<std::thread> threads;
@@ -158,7 +158,7 @@ double pi_omp_parallel_critical(double steps) {
 }
 
 
-double pi_omp_parallel_critical_wrong(double steps) {
+double pi_omp_parallel_critical_wrong(long steps) {
     unsigned int num_threads = std::thread::hardware_concurrency();
     std::cout << "\nOmp threads detected: " << num_threads << std::endl;
     std::vector<std::thread> threads;
@@ -184,8 +184,27 @@ double pi_omp_parallel_critical_wrong(double steps) {
 }
 
 
+double pi_omp_for(long steps) {
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    std::cout << "\nOmp threads detected: " << num_threads << std::endl;
+    std::vector<std::thread> threads;
+    double step = 1.0 / steps;
+    double sum = 0;
+    steps = steps;
+
+    #pragma omp parallel for reduction (+:sum)
+    for (int i=0; i<steps; i++) {
+        double x = (i + 0.5) * step;
+        sum += 4.0 / (1.0 + x * x);
+    }
+
+    double pi = step * sum;
+    return pi;
+}
+
+
 int main() {
-    double steps = 100000000;
+    long steps = 100000000;
 
     auto start_time = std::chrono::high_resolution_clock::now();
     double pi = pi_seq(steps);
@@ -257,4 +276,15 @@ int main() {
     std::cout << pi << std::endl;
     std::cout.precision(3);
     std::cout << "Took: " <<  time_span.count() << " s" << std::endl << std::endl;
+
+    start_time = std::chrono::high_resolution_clock::now();
+    pi = pi_omp_for(steps);
+    end_time = std::chrono::high_resolution_clock::now();
+    time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
+    std::cout << "Omp for pi: ";
+    std::cout.precision(17);
+    std::cout << pi << std::endl;
+    std::cout.precision(3);
+    std::cout << "Took: " <<  time_span.count() << " s" << std::endl << std::endl;
+
 }

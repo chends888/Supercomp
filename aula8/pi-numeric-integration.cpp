@@ -3,6 +3,11 @@
 #include <iostream>
 #include <chrono>
 
+/*
+How to compile this program:
+g++ pi-numeric-integration.cpp -lpthread -fopenmp
+*/
+
 void calc_parc_pi(int id, unsigned int num_steps, double step, double *res) {
     double x, sum = 0;
     for (int i=id*num_steps; i<(id*num_steps)+num_steps; i++) {
